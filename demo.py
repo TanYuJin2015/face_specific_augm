@@ -56,7 +56,7 @@ else:
 def demo():
     # 每种3d头部模型的总个数：10
     nSub = opts.getint('general', 'nTotSub')
-    # fileList 记录了输入图像文件所在目录、文件名、用到的特征点提取数据模型文件名；outputFolder 为 /output/
+    # fileList 记录了输入图像文件所在目录、文件名、用到的特征点提取数据模型文件名; outputFolder 为 /output/
     fileList, outputFolder = myutil.parse(sys.argv)
     # check for dlib saved weights for face landmark detection
     # if it fails, dowload and extract it manually from
@@ -64,6 +64,7 @@ def demo():
     # 检查是否已有dlib库的特征点检测数据模型文件, 若没有则下载并解压到dlib模块文件目录下
     check.check_dlib_landmark_weights()
     ## Preloading all the models for speed
+    # 预加载所有的头部模型
     allModels = myutil.preload(this_path,pose_models_folder,pose_models,nSub)
 
     for f in fileList:
@@ -81,7 +82,9 @@ def demo():
             lmarks.append(lmark)
         else:
             print '> Detecting landmarks'
-            lmarks = feature_detection.get_landmarks(img, this_path)
+            # lmarks = feature_detection.get_landmarks(img, this_path)
+            ## 个人修改：
+            lmarks = feature_detection.get_landmarks(img, this_path, image_path, write2File = True)
 
         if len(lmarks) != 0:
             ## Copy back original image and flipping image in case we need

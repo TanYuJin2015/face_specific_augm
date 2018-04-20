@@ -101,8 +101,7 @@ class FaceModel:
         eyemaskfill = np.zeros((self.ref_U.shape[0],self.ref_U.shape[1], 3))
 
         # 填充轮廓内的点
-        # cv2.pointPolygonTest(某一轮廓序列, 像素点坐标, boolean)
-        # 参数3: 若为 True, 则输出该像素点到轮廓的最近距离; 如果为False, 则输出为正表示在轮廓内, 0为轮廓上, 负为轮廓外。
+        # cv2.pointPolygonTest(某一轮廓序列, 像素点坐标, boolean)# 参数3: 若为 True, 则输出该像素点到轮廓的最近距离; 如果为False, 则输出为正表示在轮廓内, 0为轮廓上, 负为轮廓外。
         for r in range(self.ref_U.shape[0]):
             for c in range(self.ref_U.shape[1]):
                 # 若像素点在轮廓内, 点亮该点
