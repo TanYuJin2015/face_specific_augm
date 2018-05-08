@@ -34,10 +34,10 @@ else:
     pose_models_folder = '/models3d/'
     pose_models = ['model3D_aug_-00','model3D_aug_-40','model3D_aug_-75',]
 
-""" 如果 [general] resnetON 激活，则设置一些参数以生成最适合ResNet101进行人脸识别的渲染图像。但仍需自己实现对齐。
-    resnetON = yes，关闭 resizeCNN，重设 cnnSize，设置裁剪模型 crop_models，
-                    对每个头部模型产生的最后一张视图进行cnnSize × cnnSize的裁剪
-             = no，不做另外的裁剪 [当前]
+""" 如果 [general] resnetON 激活，则设置一些参数以生成最适合ResNet101进行人脸识别的输出视图。但仍需自己实现对齐。
+    resnetON = yes，关闭 resizeCNN，重设 cnnSize 为224，设置裁剪模型 crop_models，
+                    对每个头部模型产生的最后一张视图进行224 × 224的裁剪
+             = no，不做224的裁剪，按配置文件的cnnSize输出视图 [当前]
 """
 ## In case we want to crop the final image for each pose specified above/
 ## Each bbox should be [tlx,tly,brx,bry]
@@ -91,6 +91,7 @@ def demo():
             ## This flipping is performed using all the model or all the poses
             ## To refine the estimation of yaw. Yaw can change from model to model...
             img_display = img.copy()
+            # 当 yaw < 0 时, 将图像水平翻转, 修改特征点集; 否则, 返回输入图像和原特征点集
             img, lmarks, yaw = myutil.flipInCase(img,lmarks,allModels)
             listPose = myutil.decidePose(yaw,opts, newModels)
             ## Looping over the poses
@@ -129,7 +130,7 @@ def demo():
                         savingString = subjFolder +  '/' + image_key +'_rendered_'+ pose[8:-7]+'_'+str(subj).zfill(2)+'.jpg'
                         cv2.imwrite(savingString,rendered_raw)
                     					    	
-                    	## Plotting if required
+                    ## Plotting if required
                     if opts.getboolean('general', 'plotON'):
                         myutil.show(img_display, img, lmarks, rendered_raw, \
                         face_proj, background_proj, temp_proj2_out_2, sym_weight)

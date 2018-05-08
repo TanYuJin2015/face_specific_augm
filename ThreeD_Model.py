@@ -23,13 +23,19 @@ class FaceModel:
     """
     def load_model(self, path, name):
         model = scio.loadmat(path)[name]
+        # out_A 为 固有摄像机参数：K^I
         self.out_A = np.asmatrix(model['outA'][0, 0], dtype='float32') #3x3
+        # 224×224
         self.size_U = model['sizeU'][0, 0][0] #1x2
+        # model_TD 3D头部模型的特征点集
         self.model_TD = np.asarray(model['threedee'][0,0], dtype='float32') #68x3
+        # indbad 存储着表现不好的特征点的索引
         self.indbad = model['indbad'][0, 0]#0x1
+        # ref_U 存储着描述头部模型的三维坐标
         self.ref_U = np.asarray(model['refU'][0,0])
+        # facemask 为 3D脸部的点的索引集
         self.facemask = np.asarray(model['facemask'][0,0])
-        # self.facemask 每一项的值减1
+        # matlab索引从 1 开始, 而python从 0 开始, 故转换中各项均要减1
         self.facemask-=1 #matlab indexing
 
     """ @brief 通过最小距离聚类算法得到脸部模型的眼睛特征点标记的位置序列, 并以此填充、绘制出眼睛区域

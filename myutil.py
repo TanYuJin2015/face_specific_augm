@@ -95,11 +95,19 @@ def preload(this_path, pose_models_folder, pose_models,nSub):
             allModels[pose] = model3D
     return allModels
 
-
+""" @brief 裁剪已绘制的输出视图
+	:param pose
+	:param frontal_raw 已绘制的输出视图
+	:param crop_model 裁剪序列, 记录行和列的起始裁剪位置和终点裁剪位置
+"""
 def cropFunc(pose,frontal_raw,crop_model):
 	frontal_raw = crop_face(frontal_raw, crop_model)
 	return frontal_raw
 
+""" @brief 裁剪已绘制的输出视图, 由cropFunc()调用
+	:param img 已绘制的输出视图
+	:param cropping 裁剪序列, 记录行和列的起始裁剪位置和终点裁剪位置
+"""
 def crop_face(img, cropping):
     if cropping is not None:
         img = img[cropping[1]:cropping[3],\
@@ -109,18 +117,30 @@ def crop_face(img, cropping):
         print '> No Cropping'
     return img
 
+""" @brief 若输入图像（img）头部绕垂直轴旋转（摇摆）的角度（yaw）为负, 则更新68个特征点集合（lmarks）, 并水平翻转输入图像
+    :param img 输入图像
+    :param lmarks lmarks[0]保存着一个人脸68个特征点坐标列表
+    :param allModels 存储所有FaceModel对象的字典
+    :return img 若 yaw > 0, 返回原来的图像; 若 yaw < 0, 返回水平翻转后的图像
+            lmarks 修改后的68个特征点的新集合
+            yaw 绕垂直轴旋转（摇摆）的角度
+"""
 def flipInCase(img, lmarks, allModels):
 	## Check if we need to flip the image
+	# yaw（摇摆）表示头部绕垂直轴旋转
 	yaws= []#np.zeros(1,len(allModels))
 	## Getting yaw estimate over poses and subjects
+    # 迭代每个FaceModel对象
 	for mmm in allModels.itervalues():
-		proj_matrix, camera_matrix, rmat, tvec = calib.estimate_camera(mmm, lmarks[0])
+ 		proj_matrix, camera_matrix, rmat, tvec = calib.estimate_camera(mmm, lmarks[0])
 		yaws.append( calib.get_yaw(rmat) )
 	yaws=np.asarray(yaws)
+    # 计算 yaws 所有项的平均值
 	yaw = yaws.mean()
 	print '> Yaw value mean: ',  yaw
 	if yaw  < 0:
 	    print '> Positive yaw detected, flipping the image'
+        # 水平翻转图像
 	    img = cv2.flip(img,1)
 	    # Flipping X values for landmarks
 	    lmarks[0][:,0] = img.shape[1] - lmarks[0][:,0]
@@ -185,11 +205,17 @@ def show(img_display, img, lmarks, frontal_raw, \
 # 	else:
 # 		return [0,1,2]
 
+""" @brief 通过yaw的大小判断要绘制多少种姿态
+	:param yaw 平均的头部模型摇摆角度（绕垂直轴旋转）
+	:param opts 配置文件对象
+	:param newModels 默认为True, 表示使用models3d_new文件夹中的头部模型
+	:return 返回一个序列, 如要绘制 n 种姿态, 则该序列为 range(n)
+"""
 def decidePose(yaw,opts, newModels=True):
 	if newModels == True:
 	    if opts.getboolean('renderer', 'nearView'):
 	        yaw = abs(yaw)
-	        # If yaw is near-frontal we render everything                                                                                                                                                                            
+	        # If yaw is near-frontal we render everything
 	        if yaw < 15:
 	                return [0,1,2,3,4]
 	        # otherwise we render only 2 profiles (from profile to frontal is noisy)                                                                                                                                                 

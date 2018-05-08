@@ -18,7 +18,7 @@ def _shape_to_np(shape):
     return xy
 
 """ @brief 获取68个特征点标记序列
-    :param img 源图像
+    :param img 输入图像
     :param this_path 项目根目录
     :param image_path （个人添加）图像文件的相对路径
     :param write2File （个人添加）是否新建一个.pts数据文件, 记录68个特征点标记
@@ -50,7 +50,7 @@ def get_landmarks(img, this_path, image_path, write2File = False):
 
     """个人添加部分："""
     ## 调用display_landmarks()方法
-    display_landmarks(img, dets, shapes)
+    # display_landmarks(img, dets, shapes)
     ## 新建一个.pts数据文件, 记录68个特征点标记
     if write2File:
         pts_path = '\\' + image_path.split('.')[0] + '.pts'
@@ -60,7 +60,7 @@ def get_landmarks(img, this_path, image_path, write2File = False):
     return lmarks
 
 """ @brief 显示68特征点检测的效果图（原程序未调用该方法）
-    :param img 源图像
+    :param img 输入图像
     :param dets 保存着所有人脸检测矩形的左上和右下坐标
     :param shapes 保存所有检测到的人脸的特征点序列
 """
@@ -82,7 +82,6 @@ def write_landmarks_to_file(pts_path, lmarks):
     f.write('# landmarks need to be in the form:\n')
     f.write('# x    y\n')
     for lmark in lmarks:
-        print lmark
         for i in range(68):
             lmark_x = '%.3f' % lmark[i, 0]
             lmark_y = '%.3f' % lmark[i, 1]
