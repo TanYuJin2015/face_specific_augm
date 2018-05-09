@@ -86,7 +86,7 @@ def UnnormalizePoints(out_proj, size):
     return np.multiply(out_proj,size.T)
 
 """ @brief 当有一些投影点在输入图像外的右侧时, 处理背景（ 对应 左侧背景 + 论文Ⅳ.C中(d)图的第一个平面(经移动处理的右侧背景) ）
-           该背景区域大小与这些点形成的区域大小相等, 背景区域以采样点 thWidth 为起始点
+           该背景区域大小与这些点形成的区域大小相等, 背景区域以采样点 thWidth 为结束点（第一个平面最右端的点）
     :param out_proj 投影到输入图像外的点集
     :param face_proj_in 投影到输入图像内的脸部点集
     :param img 输入图像
