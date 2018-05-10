@@ -181,7 +181,7 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
     ind_jnt = np.hstack( (ind_outside, ind_frontal) )
 
     if opts.getboolean('renderer', 'background'):
-        frontal_raw = warpImg(img, ref_U.shape[0], ref_U.shape[1], in_proj, ind_jnt)
+        frontal_raw = warpImg(img, ref_U.shape[0], ref_U.shape[1], prj_jnt, ind_jnt)
     else:
         frontal_raw = warpImg(img, ref_U.shape[0], ref_U.shape[1], face_proj, facemask[:,0])
 
