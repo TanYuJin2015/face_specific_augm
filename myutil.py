@@ -217,14 +217,14 @@ def decidePose(yaw,opts, newModels=True):
 	        yaw = abs(yaw)
 	        # If yaw is near-frontal we render everything
 	        if yaw < 15:
-	                return [0,1,2,3,4]
+	                return [0,1,2,3,4,5]
 	        # otherwise we render only 2 profiles (from profile to frontal is noisy)                                                                                                                                                 
 	        elif yaw > 40:
-	                return [3,4]
+	                return [3,4,5]
 	        else:
-	                return [2,3,4]
+	                return [2,3,4,5]
 	    else:
-	        return [0,1,2,3,4]
+	        return [0,1,2,3,4,5]
 	else:
 		if opts.getboolean('renderer', 'nearView'):
 			yaw = abs(yaw)

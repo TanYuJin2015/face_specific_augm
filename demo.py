@@ -29,12 +29,12 @@ opts = config.parse()
 newModels = opts.getboolean('renderer', 'newRenderedViews')
 if opts.getboolean('renderer', 'newRenderedViews'):
     pose_models_folder = '/models3d_new/'
-    pose_models = ['model3D_aug_-00_00','model3D_aug_-22_00','model3D_aug_-40_00','model3D_aug_-55_00','model3D_aug_-75_00']
+    pose_models = ['model3D_aug_-00_00','model3D_aug_-22_00','model3D_aug_-40_00','model3D_aug_-55_00','model3D_aug_-70_00','model3D_aug_-75_00']
 else:
     pose_models_folder = '/models3d/'
     pose_models = ['model3D_aug_-00','model3D_aug_-40','model3D_aug_-75',]
 
-""" 如果 [general] resnetON 激活，则设置一些参数以生成最适合ResNet101进行人脸识别的输出视图。但仍需自己实现对齐。
+    """ 如果 [general] resnetON 激活，则设置一些参数以生成最适合ResNet101进行人脸识别的输出视图。但仍需自己实现对齐。
     resnetON = yes，关闭 resizeCNN，重设 cnnSize 为224，设置裁剪模型 crop_models，
                     对每个头部模型产生的最后一张视图进行224 × 224的裁剪
              = no，不做224的裁剪，按配置文件的cnnSize输出视图 [当前]
@@ -44,7 +44,7 @@ else:
 resizeCNN = opts.getboolean('general', 'resizeCNN')
 cnnSize = opts.getint('general', 'cnnSize')
 if not opts.getboolean('general', 'resnetON'):
-    crop_models = [None,None,None,None,None]  # <-- with this no crop is done.     
+    crop_models = [None,None,None,None,None,None]  # <-- with this no crop is done.
 else:
     #In case we want to produce images for ResNet
     resizeCNN=False #We can decide to resize it later using the CNN software or now here.

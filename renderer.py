@@ -4,6 +4,7 @@ import sklearn.metrics
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 np.set_printoptions(formatter={'float_kind': lambda x: "%.4f" % x})
 
@@ -85,8 +86,8 @@ def NormalizePoints(out_proj):
 def UnnormalizePoints(out_proj, size):
     return np.multiply(out_proj,size.T)
 
-""" @brief 当有一些投影点在输入图像外的右侧时, 处理背景（ 对应 左侧背景 + 论文Ⅳ.C中(d)图的第一个平面(经移动处理的右侧背景) ）
-           该背景区域大小与这些点形成的区域大小相等, 背景区域以采样点 thWidth 为结束点（第一个平面最右端的点）
+""" @brief 当有一些投影点在输入图像外的右侧时, 处理背景（ 对应 左侧背景 + 论文Ⅳ.C中(d)图的第二个平面(经移动处理的右侧背景) ）
+           该背景区域大小与这些点形成的区域大小相等, 背景区域以采样点 thWidth 为结束点（第二个平面最右端的点）
     :param out_proj 投影到输入图像外的点集
     :param face_proj_in 投影到输入图像内的脸部点集
     :param img 输入图像
@@ -104,7 +105,7 @@ def HandleBackground(out_proj,face_proj_in, img, opts):
         # idxOveral 为 所有经规范化的x坐标值大于 thWidth 的点的索引位置
         idxOveral =  np.nonzero(np.squeeze(np.asarray(out_proj[0,:]))>thWidth)[0]
         if idxOveral.size != 0:
-            # 将右侧的这些点作为背景（从人脸的左侧位置插入, 对应论文Ⅳ.C中(d)图的第一个平面）移动到采样点
+            # 将右侧的这些点作为背景（从人脸的左侧位置插入, 对应论文Ⅳ.C中(d)图的第二块平面）移动到采样点
             out_proj[0,idxOveral] = out_proj[0,idxOveral]/out_proj[0,idxOveral].max()*thWidth
 
         # In case we want to skip the head and go in the right part of the face
@@ -175,6 +176,10 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
     in_proj -= 1 # matlab indexing
     ind_frontal = ind_all[nonbadind]
     ############## END INSIDE ##################################################
+
+    # 个人添加：
+    # displayProj(img, out_proj, in_proj, face_proj_in)
+
     # To do all at once
     # 合并矩阵
     prj_jnt = np.hstack( (out_proj, in_proj) )
@@ -334,3 +339,40 @@ def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
 #         print '> skipping sym'
 #         frontal_sym = frontal_raw
 #     return frontal_sym
+
+""" @brief 用颜色显示显示投影（个人添加）
+    :param img
+    :param out_proj
+    :param in_proj
+    :param face_proj_in
+    :param mapping
+    :param read
+"""
+def displayProj(img, out_proj, in_proj, face_proj_in, mapping = True, write = False):
+    image = np.zeros((230L, 230L, 3L), dtype=np.uint8)
+
+    for i in range(0, out_proj.shape[1]):
+        if int(out_proj[0, i]) < 230 and int(out_proj[1, i]) < 230:
+            if mapping:
+                image[int(out_proj[1, i]), int(out_proj[0, i])] = img[int(out_proj[1, i]), int(out_proj[0, i])]
+            else:
+                image[int(out_proj[1, i]), int(out_proj[0, i])] = [0, 255, 0]
+    for i in range(0, in_proj.shape[1]):
+        if mapping:
+            image[int(in_proj[1, i]), int(in_proj[0, i])] = img[int(in_proj[1, i]), int(in_proj[0, i])]
+        else:
+            image[int(in_proj[1, i]), int(in_proj[0, i])] = [255, 0, 0]
+    for i in range(0, face_proj_in.shape[1]):
+        if mapping:
+           image[int(face_proj_in[1, i]), int(face_proj_in[0, i])] = img[int(face_proj_in[1, i]), int(face_proj_in[0, i])]
+        else:
+           image[int(face_proj_in[1, i]), int(face_proj_in[0, i])] = [0, 0, 255]
+
+    if write:
+        if mapping:
+            cv2.imwrite('code_references/render/mapping/color/color' + str(random.uniform(0,10000000)) + '.png', image)
+        else:
+            cv2.imwrite('code_references/render/mapping/BRG/BRG' + str(random.uniform(0,10000000)) + '.png', image)
+    else:
+        cv2.imshow('img', image)
+        cv2.waitKey()
