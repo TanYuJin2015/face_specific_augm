@@ -13,10 +13,10 @@ class Params:
     ksize_acc = 15#15
     ksize_weight = 33#33
 
-""" @brief 获取可判断对应索引位置的点是否投影到输入图像外的一个序列
+""" @brief 获取可判断对应索引位置的点是否映射到输入图像外的一个序列
     :param project 二维坐标集, 2×50176, 第一行为x坐标, 第二行为y坐标
     :param img 输入图像
-    :return bad 一个1×50176的序列, 该序列可判断对应索引位置的点是否投影到输入图像外, 序列中每个元素是一个布尔值, True表示投影到输入图像外
+    :return bad 一个1×50176的序列, 该序列可判断对应索引位置的点是否映射到输入图像外, 序列中每个元素是一个布尔值, True表示映射到输入图像外
 """
 def badIndex(project, img):
     # matlab index
@@ -26,7 +26,7 @@ def badIndex(project, img):
     bad = np.asarray(bad).reshape((-1), order='F')
     return bad
 
-""" @brief 绘制输出视图, 通过 prj 将输入图像的点重映射到输出视图的各个点（输出视图背景有被拉长的表现是因为投影点x坐标值的重叠）
+""" @brief 绘制输出视图, 通过 prj 将输入图像的点重映射到输出视图的各个点（输出视图背景有被拉长的表现是因为映射点x坐标值的重叠）
     :param img 输入图像
     :param t_height 输出视图的高
     :param t_width 输出视图的宽
@@ -57,8 +57,8 @@ def warpImg(img, t_height, t_width, prj, idx):
     new_img = new_img.astype('uint8')
     return new_img
 
-""" @brief 规范化所有投影到输入图像外的点（NDC过程）
-    :param out_proj 投影到输入图像外的点集
+""" @brief 规范化所有映射到输入图像外的点（NDC过程）
+    :param out_proj 映射到输入图像外的点集
     :return out_proj 经规范化后的点集
 """
 def NormalizePoints(out_proj):
@@ -86,10 +86,10 @@ def NormalizePoints(out_proj):
 def UnnormalizePoints(out_proj, size):
     return np.multiply(out_proj,size.T)
 
-""" @brief 当有一些投影点在输入图像外的右侧时, 处理背景（ 对应 左侧背景 + 论文Ⅳ.C中(d)图的第二个平面(经移动处理的右侧背景) ）
+""" @brief 当有一些映射点在输入图像外的右侧时, 处理背景（ 对应 左侧背景 + 论文Ⅳ.C中(d)图的第二个平面(经移动处理的右侧背景) ）
            该背景区域大小与这些点形成的区域大小相等, 背景区域以采样点 thWidth 为结束点（第二个平面最右端的点）
-    :param out_proj 投影到输入图像外的点集
-    :param face_proj_in 投影到输入图像内的脸部点集
+    :param out_proj 映射到输入图像外的点集
+    :param face_proj_in 映射到输入图像内的脸部点集
     :param img 输入图像
     :param opts 配置文件对象
     :return out_proj 经背景处理后的点集
@@ -100,7 +100,7 @@ def HandleBackground(out_proj,face_proj_in, img, opts):
         widthX = lenn[1]
         heightY = lenn[0]
         # face_proj_in[0,:].min()/img.shape[1] 是二维图像上脸部最左端的点经规范化的x坐标的值
-        # scaleFaceX使得对背景进行采样时, 使采样点稍微离脸部隔点距离
+        # scaleFaceX使得对背景进行采样时, 使采样点稍微离脸部隔点距离, 覆盖头发
         thWidth = face_proj_in[0,:].min()/img.shape[1]*opts.getfloat('renderer','scaleFaceX')
         # idxOveral 为 所有经规范化的x坐标值大于 thWidth 的点的索引位置
         idxOveral =  np.nonzero(np.squeeze(np.asarray(out_proj[0,:]))>thWidth)[0]
@@ -126,9 +126,9 @@ def HandleBackground(out_proj,face_proj_in, img, opts):
     :param opts 配置文件对象
     :return frontal_raw 绘制的输出图像
     :return frontal_sym 应用了soft-sym处理的输出图像
-    :return face_proj_in 投影到输入图像内的脸部区域的点集
-    :return out_proj_disp 投影到输入图像外的点集
-    :return out_proj 投影到输入图像外的点集
+    :return face_proj_in 映射到输入图像内的脸部区域的点集
+    :return out_proj_disp 映射到输入图像外的点集
+    :return out_proj 映射到输入图像外的点集
     :return sym_weight
 """
 def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
@@ -142,8 +142,8 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
     # proj_matrix是 3×4 的相机矩阵, 与齐次坐标下的三维点集相乘, 转化为齐次坐标下的二维点集（temp_proj, 3×50176）
     temp_proj = proj_matrix * np.vstack((threedee, np.ones((1, threedee.shape[1]))))
     # numpy.tile() 把数组沿各个方向复制; np.divide() 将每一项做除法, 将齐次坐标转换回笛卡尔坐标（project, 2×50176）
-    # project 存储着经人脸对齐后, 224×224的投影视图各个坐标在输入图像中的对应坐标位置
-    # project 中存在非正数或超出输入图像宽或高（matlab index）的坐标值时, 表示投影视图的对应索引的点投影在输入图像外
+    # project 存储着纹理映射后, 224×224的纹理图与输入图像的映射关系的各个对应坐标
+    # project 中存在非正数或超出输入图像宽或高（matlab index）的坐标值时, 表示对应索引的点映射在输入图像外
     project = np.divide(temp_proj[0:2, :], np.tile(temp_proj[2, :], (2,1)))
     ## Getting only the face for debug purpose and the background mask as well
     # 得到背景区域的点的索引集
@@ -153,7 +153,7 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
     #out_proj = project[:, bg_mask]
     ## Getting points that are outside the image(1×50176)
     bad = badIndex(project, img)
-    # nonbadind 存放投影视图所有投影在输入图像内的点的索引序列
+    # nonbadind 存放所有映射在输入图像内的点的索引序列
     nonbadind = np.nonzero(bad == 0)[0]
     badind = np.nonzero(bad == 1)[0]
     ## Check which points lie outside of the image
@@ -167,7 +167,7 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
     face_in = np.nonzero( badface == 0 )[0]
     face_proj_in = face_proj[:,face_in]
     ## In case we have some points outside, handle the bg
-    # 假如有一些点投影到输入图像外, 则处理背景
+    # 假如有一些点映射到输入图像外, 则处理背景
     out_proj = HandleBackground(out_proj,face_proj_in, img, opts)
     ############## END OUTSIDE ##################################################
     ############## INSIDE ##################################################
@@ -195,16 +195,16 @@ def render(img, proj_matrix, ref_U, eyemask, facemask, opts):
 
     return frontal_raw, frontal_sym, face_proj_in, out_proj_disp, out_proj, sym_weight
 
-""" @brief 使用软件形式的边缘融合技术处理输出视图（只处理正脸输出图像, 具有 eyemask）
+""" @brief 使用软边界融合技术处理输出视图（只处理正脸输出图像, 具有 eyemask）
     :param img 输入图像
     :param frontal_raw 已绘制的输出视图
     :param ref_U 三维头部模型的坐标集（包含脸部和背景区域等所有点的坐标）
     :param in_proj 成像平面内的点集
-    :param ind_frontal 投影到输入图像内的点的索引集
+    :param ind_frontal 映射到输入图像内的点的索引集
     :param bg_mask 背景区域的点的索引集
     :param eyemask 眼睛区域的点的索引集
     :param opts 配置文件对象
-    :return frontal_sym 经过边缘融合技术处理后的输出视图
+    :return frontal_sym 经过软边界融合技术处理后的输出视图
     :return weights 软混合权重
 """
 def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
@@ -215,12 +215,17 @@ def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
         ## Soft Symmetry param
         ksize_acc = Params.ksize_acc
         ################
-        ## SOFT SYMMETRY 
+        ## SOFT SYMMETRY
+        # 1×44476, 获取映射在输入图像内的点的索引（in_proj 为 2×44476）
         ind = np.ravel_multi_index((np.asarray(in_proj[1, :].round(), dtype='int64'), np.asarray(in_proj[0, :].round(),
                                     dtype='int64')), dims=img.shape[:-1], order='F')
+        # 224×224
         synth_frontal_acc = np.zeros(ref_U.shape[:-1])
+        # c: 去除重复值后的数组（升序排列）; ic: 索引数组, 表示c的每一个元素在ind数组中出现的起始位置
         c, ic = np.unique(ind, return_inverse=True)
+        # r_[] 将一系列的序列合并到一个数组
         bin_edges = np.r_[-np.Inf, 0.5 * (c[:-1] + c[1:]), np.Inf]
+        # 直方图数组和箱式向量
         count, bin_edges = np.histogram(ind, bin_edges)
         synth_frontal_acc = synth_frontal_acc.reshape(-1, order='F')
         synth_frontal_acc[ind_frontal] = count[ic]
@@ -228,7 +233,7 @@ def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
         synth_frontal_acc = cv2.GaussianBlur(synth_frontal_acc, (ksize_acc, ksize_acc), 30., borderType=cv2.BORDER_REPLICATE)
         ## Checking which side has more occlusions?
         midcolumn = np.round(ref_U.shape[1]/2)
-        # apply soft symmetry to use whatever parts are visible in ocluded side
+        # apply soft symmetry to use whatever parts are vi sible in ocluded side
         synth_frontal_acc = synth_frontal_acc.reshape(-1, order='F')
         minacc=synth_frontal_acc[facemask].min()
         maxacc=synth_frontal_acc[facemask].max()
@@ -248,10 +253,10 @@ def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
         frontal_flip[:,0:midcolumn,:] = np.fliplr(frontal_flip)[:,0:midcolumn,:]
         frontal_sym = np.multiply(frontal_raw, 1.-synth_frontal_acc) + np.multiply(frontal_flip, synth_frontal_acc)
 
-
         frontal_sym[frontal_sym > 255] = 255
         frontal_sym[frontal_sym < 0] = 0
         frontal_sym = frontal_sym.astype('uint8')
+
         weights = synth_frontal_acc[:,:,0]
     else: # both sides are occluded pretty much to the same extent -- do not use symmetry
         print '> skipping sym'
@@ -340,7 +345,7 @@ def mysoftSymmetry(img, frontal_raw, ref_U, in_proj, \
 #         frontal_sym = frontal_raw
 #     return frontal_sym
 
-""" @brief 用颜色显示显示投影（个人添加）
+""" @brief 用颜色显示显示映射（个人添加）
     :param img
     :param out_proj
     :param in_proj

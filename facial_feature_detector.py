@@ -50,7 +50,7 @@ def get_landmarks(img, this_path, image_path, write2File = False):
 
     """个人添加部分："""
     ## 调用display_landmarks()方法
-    # display_landmarks(img, dets, shapes)
+    display_landmarks(img, dets, shapes)
     ## 新建一个.pts数据文件, 记录68个特征点标记
     if write2File:
         pts_path = '\\' + image_path.split('.')[0] + '.pts'
